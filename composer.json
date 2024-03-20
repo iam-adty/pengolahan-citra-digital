@@ -1,0 +1,15 @@
+{
+    "name": "iam-adty/pengolahan-citra-digital",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "IamAdty\\PengolahanCitraDigital\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "atk4/ui": "^5.0"
+    }
+}
