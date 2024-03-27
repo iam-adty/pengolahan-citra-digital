@@ -23,7 +23,7 @@ services:
       labels:
         expose-service-via: swarm_traefik
 
-        traefik.enable: true
+        traefik.enable: 'true'
         traefik.docker.network: pengolahan-citra-digital_default
 
         traefik.http.services.pcd.loadbalancer.server.port: 80
