@@ -2,11 +2,14 @@
 
 namespace App\Page;
 
+use App\Lib\PowerTransformation;
 use Atk4\Data\Model;
 use Atk4\Data\Field;
 use Atk4\Ui\Accordion;
+use Atk4\Ui\Button;
 use Atk4\Ui\Columns;
 use Atk4\Ui\Form;
+use Atk4\Ui\Form\Control\Dropdown;
 use Atk4\Ui\Form\Control\UploadImage;
 use Atk4\Ui\Layout;
 use Atk4\Ui\Table\Column\Link;
@@ -20,6 +23,8 @@ use Empira\App\Page;
 use Empira\Component\Table;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\ImageInterface;
+use Intervention\Image\Interfaces\ModifierInterface;
 
 class Index extends Page
 {
@@ -292,7 +297,7 @@ class Index extends Page
                 return $virtualPage;
             });
 
-            $accordion->addSection('Negatif', function (VirtualPage $virtualPage) use ($readImage) {
+            $accordion->addSection('Negatif Pixel', function (VirtualPage $virtualPage) use ($readImage) {
                 $tableColor = Table::addTo($virtualPage);
 
                 if (!is_null($this->getApp()->tryGetRequestQueryParam('x1')) && !is_null($this->getApp()->tryGetRequestQueryParam('y1')) && !is_null($this->getApp()->tryGetRequestQueryParam('x2')) && !is_null($this->getApp()->tryGetRequestQueryParam('y2'))) {
@@ -344,6 +349,228 @@ class Index extends Page
 
                 return $virtualPage;
             });
+
+            $accordion->addSection('Negatif Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $readImage->modify(new class implements ModifierInterface {
+                    public function apply(ImageInterface $image): ImageInterface
+                    {
+                        for ($w = 0; $w < $image->width(); $w++) {
+                            for ($h = 0; $h < $image->height(); $h++) {
+                                $pixelColor = $image->pickColor($w, $h);
+
+                                $red = 255 - $pixelColor->red()->toInt();
+                                $green = 255 - $pixelColor->green()->toInt();
+                                $blue = 255 - $pixelColor->blue()->toInt();
+
+                                $image->drawPixel($w, $h, 'rgb(' . implode(', ', [$red, $green, $blue]) . ')');
+                            }
+                        }
+
+                        return $image;
+                    }
+                });
+
+                Image::addTo($virtualPage, [
+                    $readImage->toJpeg()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $accordion->addSection('Grayscale Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $readImage->modify(new class implements ModifierInterface {
+                    public function apply(ImageInterface $image): ImageInterface
+                    {
+                        for ($w = 0; $w < $image->width(); $w++) {
+                            for ($h = 0; $h < $image->height(); $h++) {
+                                $pixelColor = $image->pickColor($w, $h);
+
+                                $red = $pixelColor->red()->toInt();
+                                $green = $pixelColor->green()->toInt();
+                                $blue = $pixelColor->blue()->toInt();
+
+                                $average = ($red + $green + $blue) / 3;
+
+                                $red = $average;
+                                $green = $average;
+                                $blue = $average;
+
+                                $image->drawPixel($w, $h, 'rgb(' . implode(', ', [$red, $green, $blue]) . ')');
+                            }
+                        }
+
+                        return $image;
+                    }
+                });
+
+                Image::addTo($virtualPage, [
+                    $readImage->toJpeg()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $accordion->addSection('Black White Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $readImage->modify(new class implements ModifierInterface {
+                    public function apply(ImageInterface $image): ImageInterface
+                    {
+                        for ($w = 0; $w < $image->width(); $w++) {
+                            for ($h = 0; $h < $image->height(); $h++) {
+                                $pixelColor = $image->pickColor($w, $h);
+
+                                $red = $pixelColor->red()->toInt();
+                                $green = $pixelColor->green()->toInt();
+                                $blue = $pixelColor->blue()->toInt();
+
+                                $average = ($red + $green + $blue) / 3;
+
+                                if ($average > 127) {
+                                    $average = 255;
+                                } else {
+                                    $average = 0;
+                                }
+
+                                $red = $average;
+                                $green = $average;
+                                $blue = $average;
+
+                                $image->drawPixel($w, $h, 'rgb(' . implode(', ', [$red, $green, $blue]) . ')');
+                            }
+                        }
+
+                        return $image;
+                    }
+                });
+
+                Image::addTo($virtualPage, [
+                    $readImage->toJpeg()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $accordion->addSection('Log Transformation Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $readImage->modify(new class implements ModifierInterface {
+                    public function apply(ImageInterface $image): ImageInterface
+                    {
+                        for ($w = 0; $w < $image->width(); $w++) {
+                            for ($h = 0; $h < $image->height(); $h++) {
+                                $pixelColor = $image->pickColor($w, $h);
+
+                                $red = $pixelColor->red()->toInt();
+                                $green = $pixelColor->green()->toInt();
+                                $blue = $pixelColor->blue()->toInt();
+
+                                $red = 255 / log(1 + $red) * log(1 + $red);
+                                $green = 255 / log(1 + $green) * log(1 + $green);
+                                $blue = 255 / log(1 + $blue) * log(1 + $blue);
+
+                                $red = max(0, min(255, $red));
+                                $green = max(0, min(255, $green));
+                                $blue = max(0, min(255, $blue));
+
+                                $image->drawPixel($w, $h, 'rgb(' . implode(', ', [$red, $green, $blue]) . ')');
+                            }
+                        }
+
+                        return $image;
+                    }
+                });
+
+                Image::addTo($virtualPage, [
+                    $readImage->toBitmap()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $accordion->addSection('Power Law Transformation Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $image1 = $readImage;
+                $image2 = $readImage;
+                $image3 = $readImage;
+
+                $image1->modify(new PowerTransformation(0.25));
+
+                $col = Columns::addTo($virtualPage);
+
+                Image::addTo($col, [
+                    $image1->toBitmap()->toDataUri()
+                ]);
+
+                $image2->modify(new PowerTransformation(1));
+
+                Image::addTo($col, [
+                    $image2->toBitmap()->toDataUri()
+                ]);
+
+                $image3->modify(new PowerTransformation(1.75));
+
+                Image::addTo($col, [
+                    $image3->toBitmap()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $accordion->addSection('Piecewise Transformation Image', function (VirtualPage $virtualPage) use ($readImage) {
+                $readImage->modify(new class implements ModifierInterface {
+                    public function apply(ImageInterface $image): ImageInterface
+                    {
+                        for ($w = 0; $w < $image->width(); $w++) {
+                            for ($h = 0; $h < $image->height(); $h++) {
+                                $pixelColor = $image->pickColor($w, $h);
+
+                                $red = $pixelColor->red()->toInt();
+                                $green = $pixelColor->green()->toInt();
+                                $blue = $pixelColor->blue()->toInt();
+
+                                $red = Index::applyPiecewiseLinearTransformation($red, [64, 128, 192], [0.5, 1, 1.5]);
+                                $green = Index::applyPiecewiseLinearTransformation($green, [64, 128, 192], [0.5, 1, 1.5]);
+                                $blue = Index::applyPiecewiseLinearTransformation($blue, [64, 128, 192], [0.5, 1, 1.5]);
+
+                                $red = max(0, min(255, $red));
+                                $green = max(0, min(255, $green));
+                                $blue = max(0, min(255, $blue));
+
+                                $image->drawPixel($w, $h, 'rgb(' . implode(', ', [$red, $green, $blue]) . ')');
+                            }
+                        }
+
+                        return $image;
+                    }
+                });
+
+                Image::addTo($virtualPage, [
+                    $readImage->toBitmap()->toDataUri()
+                ]);
+
+                return $virtualPage;
+            });
+
+            $buttonAritmatika = Button::addTo($colKanan->addRow(), [
+                'Aritmatika Image'
+            ]);
+
+            $buttonAritmatika->link('/aritmatika');
+        }
+    }
+
+    public static function applyPiecewiseLinearTransformation($value, $breakpoints, $slopes) {
+        $index = 0;
+        foreach ($breakpoints as $i => $breakpoint) {
+            if ($value < $breakpoint) {
+                $index = $i;
+                break;
+            }
+        }
+    
+        // Apply linear transformation based on the segment
+        if ($index === 0) {
+            return $slopes[0] * $value;
+        } else {
+            $prevBreakpoint = $breakpoints[$index - 1];
+            $prevSlope = $slopes[$index - 1];
+            return $prevSlope * $value + (1 - $prevSlope) * $prevBreakpoint;
         }
     }
 }
