@@ -3,7 +3,6 @@ version: '3'
 networks:
   default:
     driver: overlay
-    attachable: true
 
 services:
   reverse-proxy:
