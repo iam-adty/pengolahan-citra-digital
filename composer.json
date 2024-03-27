@@ -4,7 +4,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "IamAdty\\PengolahanCitraDigital\\": "src/",
+            "App\\": "app/",
+            "Empira\\": "src/",
             "Frontpack\\": "vendor_override/Frontpack/"
         },
         "exclude-from-classmap": [
