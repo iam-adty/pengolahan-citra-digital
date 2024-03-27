@@ -4,12 +4,36 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "IamAdty\\PengolahanCitraDigital\\": "src/"
-        }
+            "IamAdty\\PengolahanCitraDigital\\": "src/",
+            "Frontpack\\": "vendor_override/Frontpack/"
+        },
+        "exclude-from-classmap": [
+            "vendor/frontpack/composer-assets-plugin/src/RefreshAssetsCommand.php"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "atk4/ui": "^5.0"
+        "atk4/ui": "^5.0",
+        "intervention/image": "^3.5"
+    },
+    "require-dev": {
+        "frontpack/composer-assets-plugin": "^0.11.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "frontpack/composer-assets-plugin": true
+        }
+    },
+    "extra": {
+        "assets-dir": "public/assets/vendor",
+        "assets-files": {
+            "atk4/ui": [
+                "public/logo.png",
+                "public/css",
+                "public/js",
+                "public/external"
+            ]
+        }
     }
 }
