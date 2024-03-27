@@ -1,0 +1,57 @@
+version: '3'
+
+networks:
+  default:
+    driver: overlay
+    attachable: true
+
+services:
+  reverse-proxy:
+    image: nginx:latest
+    networks:
+      - default
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./:/var/www/html
+      - ./docker/reverse-proxy/templates:/etc/nginx/templates
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == worker
+      labels:
+        expose-service-via: swarm_traefik
+
+        traefik.enable: true
+        traefik.docker.network: pengolahan-citra-digital_default
+
+        traefik.http.services.pcd.loadbalancer.server.port: 80
+
+        traefik.http.routers.pcd.rule: Host(`${DOMAIN}`)
+        traefik.http.routers.pcd.entrypoints: http
+        traefik.http.routers.pcd.service: pcd
+        traefik.http.routers.pcd.middlewares: redirectToHttps@file
+
+        traefik.http.routers.pcd_secure.rule: Host(`${DOMAIN}`)
+        traefik.http.routers.pcd_secure.entrypoints: https
+        traefik.http.routers.pcd_secure.service: pcd
+        traefik.http.routers.pcd_secure.tls: 'true'
+      restart_policy:
+        condition: any
+
+  app:
+    image: registry.ds.local/empira:latest
+    networks:
+      - default
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./:/var/www/html
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: any
